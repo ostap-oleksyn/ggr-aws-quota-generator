@@ -31,7 +31,7 @@ def get_selenoid_configs(hosts):
             with urllib.request.urlopen(url) as response:
                 config = json.loads(response.read().decode('utf-8'))
         except IOError as error:
-            logger.error(error)
+            logger.error("Error getting selenoid status from {} : {}".format(host, error))
             continue
 
         count = str(config['total'])
@@ -88,13 +88,14 @@ def get_teams_and_hosts(tag_name):
 def cleanup_quota_files(teams_hosts):
     teams = teams_hosts.keys()
     for file in glob.glob(quota_dir_path + "*.xml"):
-        if len(teams) == 0 or file.replace(quota_dir_path, '').replace('.xml', '') not in teams:
+        team = file.replace(quota_dir_path, '').replace('.xml', '')
+        if len(teams) == 0 or team not in teams:
             root = Element('qa:browsers', attrib={'xmlns:qa': 'urn:config.gridrouter.qatools.ru'})
             try:
                 with open(file, 'wb') as xml_quota:
                     ElementTree.ElementTree(root).write(xml_quota)
             except OSError as error:
-                logger.error(error)
+                logger.error("Error cleaning up '{}' team xml quota file: {}".format(team, error))
 
 
 def get_aws_region():
@@ -119,7 +120,7 @@ def main():
             with open('{}{}.xml'.format(quota_dir_path, team), 'w') as quota_file:
                 quota_file.write(quota)
         except OSError as error:
-            logger.error(error)
+            logger.error("Error writing '{}' team xml quota file: {}".format(team, error))
 
     cleanup_quota_files(teams_hosts)
 
